@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
+import AddPerson from "./pages/AddPerson";
+import PersonDetail from "./pages/PersonDetail";
 import AddDocument from "./pages/AddDocument";
 import ViewDocument from "./pages/ViewDocument";
 import NotFound from "./pages/NotFound";
@@ -22,7 +24,9 @@ const App = () => (
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/add-document" element={<AddDocument />} />
+          <Route path="/add-person" element={<AddPerson />} />
+          <Route path="/person/:id" element={<PersonDetail />} />
+          <Route path="/add-document/:personId" element={<AddDocument />} />
           <Route path="/document/:id" element={<ViewDocument />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

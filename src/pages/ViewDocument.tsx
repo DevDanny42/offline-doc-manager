@@ -17,7 +17,7 @@ import { DOCUMENT_TYPE_LABELS } from "@/types/Document";
 // Demo fallback
 const DEMO_DOC: Document = {
   id: 1, name: "Aadhar Card", type: "AADHAR", filePath: "/files/aadhar.jpg",
-  ownerId: 1, description: "Personal Aadhar Card", createdAt: "2025-01-15T10:00:00Z",
+  personId: 1, ownerId: 1, description: "Personal Aadhar Card", createdAt: "2025-01-15T10:00:00Z",
 };
 
 const ViewDocument = () => {
@@ -71,7 +71,7 @@ const ViewDocument = () => {
       await documentApi.delete(doc.id);
     } catch { /* fallback */ }
     toast({ title: "Document deleted" });
-    navigate("/dashboard");
+    navigate(-1);
   };
 
   const handleShare = () => {
@@ -96,7 +96,7 @@ const ViewDocument = () => {
     <div className="min-h-screen bg-background">
       <header className="bg-gradient-hero text-primary-foreground">
         <div className="container max-w-2xl py-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 mb-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 mb-4">
             <ArrowLeft className="w-4 h-4 mr-1" /> Back
           </Button>
           <div className="flex items-start justify-between">
