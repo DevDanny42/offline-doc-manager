@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Upload, FileText, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import type { DocumentType } from "@/types/Document";
 import { DOCUMENT_TYPE_LABELS } from "@/types/Document";
 
 const AddDocument = () => {
+  const { personId } = useParams<{ personId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
@@ -30,8 +31,6 @@ const AddDocument = () => {
   }, [navigate]);
 
   const handleFileSelect = () => {
-    // In Android WebView, this would trigger the native file picker via WebAppInterface
-    // For web, we simulate a file input
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*,.pdf";
@@ -50,21 +49,22 @@ const AddDocument = () => {
       toast({ title: "Please enter a document name", variant: "destructive" });
       return;
     }
-    if (!user) return;
+    if (!user || !personId) return;
     setSaving(true);
     try {
       await documentApi.create({
         name,
         type,
         filePath: `/files/${fileName || "document.pdf"}`,
+        personId: Number(personId),
         ownerId: user.id,
         description,
       });
       toast({ title: "Document saved!" });
-      navigate("/dashboard");
+      navigate(`/person/${personId}`);
     } catch {
       toast({ title: "Saved locally", description: "Backend not available." });
-      navigate("/dashboard");
+      navigate(`/person/${personId}`);
     } finally {
       setSaving(false);
     }
@@ -74,7 +74,7 @@ const AddDocument = () => {
     <div className="min-h-screen bg-background">
       <header className="bg-gradient-hero text-primary-foreground">
         <div className="container max-w-2xl py-6">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 mb-4">
+          <Button variant="ghost" size="sm" onClick={() => navigate(personId ? `/person/${personId}` : "/dashboard")} className="text-primary-foreground/70 hover:text-primary-foreground hover:bg-primary-foreground/10 mb-4">
             <ArrowLeft className="w-4 h-4 mr-1" /> Back
           </Button>
           <h1 className="text-2xl font-display font-bold">Add Document</h1>
@@ -83,7 +83,6 @@ const AddDocument = () => {
       </header>
 
       <div className="container max-w-2xl py-8 space-y-6">
-        {/* File upload area */}
         <Card className="shadow-card border-0 animate-fade-in">
           <CardContent className="p-6">
             <button
@@ -120,7 +119,6 @@ const AddDocument = () => {
           </CardContent>
         </Card>
 
-        {/* Details */}
         <Card className="shadow-card border-0 animate-fade-in" style={{ animationDelay: "100ms" }}>
           <CardHeader>
             <CardTitle className="font-display text-lg">Document Details</CardTitle>
@@ -130,13 +128,10 @@ const AddDocument = () => {
               <Label>Document Name</Label>
               <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Aadhar Card" />
             </div>
-
             <div className="space-y-2">
               <Label>Document Type</Label>
               <Select value={type} onValueChange={(v) => setType(v as DocumentType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {Object.entries(DOCUMENT_TYPE_LABELS).map(([key, label]) => (
                     <SelectItem key={key} value={key}>{label}</SelectItem>
@@ -144,12 +139,10 @@ const AddDocument = () => {
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label>Description (optional)</Label>
               <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Add notes about this document..." rows={3} />
             </div>
-
             <Button onClick={handleSave} disabled={saving} className="w-full h-11">
               {saving ? "Saving..." : "Save Document"}
             </Button>

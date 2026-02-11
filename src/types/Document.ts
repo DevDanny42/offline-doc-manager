@@ -4,6 +4,8 @@ export interface Document {
   type: DocumentType;
   filePath: string;
   thumbnailPath?: string;
+  personId: number;
+  personName?: string;
   ownerId: number;
   ownerName?: string;
   description?: string;
@@ -35,6 +37,7 @@ export interface DocumentCreateRequest {
   type: DocumentType;
   filePath: string;
   thumbnailPath?: string;
+  personId: number;
   ownerId: number;
   description?: string;
 }

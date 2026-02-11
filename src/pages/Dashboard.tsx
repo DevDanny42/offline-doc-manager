@@ -1,30 +1,27 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, User, LogOut, FileText, FolderOpen } from "lucide-react";
+import { Plus, User, LogOut, FileText, Search, UserPlus, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
-import DocumentCard from "@/components/DocumentCard";
+import { Card, CardContent } from "@/components/ui/card";
 import SearchBar from "@/components/SearchBar";
-import { documentApi } from "@/services/api";
+import { personApi } from "@/services/api";
 import type { User as UserType } from "@/types/User";
-import type { Document } from "@/types/Document";
+import type { Person } from "@/types/Person";
 import { useToast } from "@/hooks/use-toast";
 
-// Demo data for when backend is not available
-const DEMO_DOCUMENTS: Document[] = [
-  { id: 1, name: "Aadhar Card", type: "AADHAR", filePath: "/files/aadhar.jpg", ownerId: 1, description: "Personal Aadhar", createdAt: "2025-01-15T10:00:00Z" },
-  { id: 2, name: "PAN Card", type: "PAN", filePath: "/files/pan.jpg", ownerId: 1, description: "Income tax PAN", createdAt: "2025-02-01T10:00:00Z" },
-  { id: 3, name: "Bank Passbook", type: "BANK_PASSBOOK", filePath: "/files/passbook.jpg", ownerId: 1, description: "SBI Savings Account", createdAt: "2025-02-10T10:00:00Z" },
-  { id: 4, name: "Passport Photo", type: "PHOTO", filePath: "/files/photo.jpg", ownerId: 1, description: "Recent passport size photo", createdAt: "2025-03-05T10:00:00Z" },
-  { id: 5, name: "Degree Certificate", type: "CERTIFICATE", filePath: "/files/degree.pdf", ownerId: 1, description: "B.Tech Computer Science", createdAt: "2025-03-20T10:00:00Z" },
+const DEMO_PERSONS: Person[] = [
+  { id: 1, name: "Rahul Sharma", phone: "9876543210", address: "123 MG Road, Delhi", createdByUserId: 1, createdAt: "2025-01-15T10:00:00Z" },
+  { id: 2, name: "Priya Patel", phone: "9123456789", address: "45 Park Street, Mumbai", createdByUserId: 1, createdAt: "2025-02-01T10:00:00Z" },
+  { id: 3, name: "Amit Kumar", phone: "9988776655", address: "78 Lake View, Bangalore", createdByUserId: 1, createdAt: "2025-03-05T10:00:00Z" },
 ];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [user, setUser] = useState<UserType | null>(null);
-  const [documents, setDocuments] = useState<Document[]>([]);
+  const [persons, setPersons] = useState<Person[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -36,40 +33,26 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    const fetchDocs = async () => {
+    const fetchPersons = async () => {
       try {
-        const docs = await documentApi.getAll(user.id);
-        setDocuments(docs);
+        const data = await personApi.getAll(user.id);
+        setPersons(data);
       } catch {
-        setDocuments(DEMO_DOCUMENTS);
+        setPersons(DEMO_PERSONS);
       } finally {
         setLoading(false);
       }
     };
-    fetchDocs();
+    fetchPersons();
   }, [user]);
 
-  const filteredDocs = useMemo(() => {
-    if (!search.trim()) return documents;
+  const filteredPersons = useMemo(() => {
+    if (!search.trim()) return persons;
     const q = search.toLowerCase();
-    return documents.filter(
-      d => d.name.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q)
+    return persons.filter(
+      p => p.name.toLowerCase().includes(q) || p.phone?.includes(q)
     );
-  }, [documents, search]);
-
-  const handleDelete = async (id: number) => {
-    try {
-      await documentApi.delete(id);
-    } catch {
-      // fallback
-    }
-    setDocuments(prev => prev.filter(d => d.id !== id));
-    toast({ title: "Document deleted" });
-  };
-
-  const handleView = (doc: Document) => {
-    navigate(`/document/${doc.id}`);
-  };
+  }, [persons, search]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -121,42 +104,70 @@ const Dashboard = () => {
               Hi, {user?.fullName?.split(" ")[0] || "there"} 👋
             </h1>
             <p className="text-muted-foreground text-sm mt-0.5">
-              {documents.length} document{documents.length !== 1 ? "s" : ""} stored
+              {persons.length} person{persons.length !== 1 ? "s" : ""} saved
             </p>
           </div>
-          <Button onClick={() => navigate("/add-document")} className="h-10 shadow-accent-glow">
-            <Plus className="w-4 h-4 mr-1" /> Add New
+          <Button onClick={() => navigate("/add-person")} className="h-10 shadow-accent-glow">
+            <UserPlus className="w-4 h-4 mr-1" /> Add Person
           </Button>
         </div>
 
         {/* Search */}
-        <SearchBar value={search} onChange={setSearch} />
+        <SearchBar value={search} onChange={setSearch} placeholder="Search by name or phone..." />
 
-        {/* Document List */}
+        {/* Person List */}
         {loading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
               <div key={i} className="h-24 bg-muted rounded-lg animate-pulse" />
             ))}
           </div>
-        ) : filteredDocs.length > 0 ? (
+        ) : filteredPersons.length > 0 ? (
           <div className="space-y-3">
-            {filteredDocs.map((doc, i) => (
-              <div key={doc.id} style={{ animationDelay: `${i * 60}ms` }}>
-                <DocumentCard document={doc} onView={handleView} onDelete={handleDelete} />
+            {filteredPersons.map((person, i) => (
+              <div key={person.id} style={{ animationDelay: `${i * 60}ms` }}>
+                <Card
+                  className="shadow-card border-0 hover:shadow-card-hover transition-all duration-200 cursor-pointer group animate-fade-in"
+                  onClick={() => navigate(`/person/${person.id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-12 h-12 shrink-0">
+                        <AvatarFallback className="bg-primary/10 text-primary font-semibold text-base">
+                          {person.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground truncate">{person.name}</h3>
+                        {person.phone && (
+                          <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+                            <Phone className="w-3.5 h-3.5" />
+                            <span>{person.phone}</span>
+                          </div>
+                        )}
+                        {person.address && (
+                          <div className="flex items-center gap-1.5 mt-0.5 text-sm text-muted-foreground truncate">
+                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">{person.address}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <FolderOpen className="w-8 h-8 text-muted-foreground" />
+              <Search className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="font-display font-semibold text-foreground mb-1">
-              {search ? "No documents found" : "No documents yet"}
+              {search ? "No persons found" : "No persons added yet"}
             </h3>
             <p className="text-muted-foreground text-sm">
-              {search ? "Try a different search term" : "Tap 'Add New' to store your first document"}
+              {search ? "Try a different name or phone number" : "Tap 'Add Person' to save someone's information"}
             </p>
           </div>
         )}
